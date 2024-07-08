@@ -1,6 +1,8 @@
 # Kitchen
 
-An integrated C++20 development environment on Ubuntu 24
+An integrated C++20 development environment for Ubuntu (v24.04 LTS).
+
+This repository is intended to be derived/instantiated via GitHub forking, templating, or DevContainers.
 
 ## Installations
 

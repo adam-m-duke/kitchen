@@ -1,7 +1,8 @@
 {
     "name": "kitchen",
     "build": {
-        "dockerfile": "Dockerfile"
+        "dockerfile": "Dockerfile",
+        "target": "kitchen"
     },
     "customizations": {
         "vscode": {
