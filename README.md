@@ -16,10 +16,12 @@ This repository is intended to be derived/instantiated via GitHub forking, templ
 
 #### C++ Packages
 - Boost
+- Eigen
 - Google 
     - Abseil
     - Benchmark
     - Highway
+    - Protobuf
     - Test
 - *...see [CMakeLists.txt](CMakeLists.txt) for complete listing*
 
