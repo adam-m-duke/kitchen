@@ -91,14 +91,15 @@ COPY --from=stage-flatbuffers  /pantry/flatbuffers  /pantry/flatbuffers
 COPY --from=stage-highway      /pantry/hwy          /pantry/hwy
 COPY --from=stage-protobuf     /pantry/protobuf     /pantry/protobuf
 
-# CMake Config Paths
+# protoc, flatc
+ENV PATH="$PATH:/pantry/flatbuffers/bin:/pantry/protobuf/bin"
+# cmake package config roots
 ENV absl_ROOT="/pantry/absl/lib/cmake" \
     Eigen3_DIR="/pantry/eigen/share/eigen3/cmake" \
     flatbuffers_ROOT="/pantry/flatbuffers/lib/cmake/flatbuffers" \
     hwy_ROOT="/pantry/hwy/lib/cmake/hwy" \
     utf8_range_ROOT="/pantry/protobuf/lib/cmake/utf8_range" \
-    protobuf_ROOT="/pantry/protobuf/lib/cmake/protobuf" \
-    PATH="$PATH:/pantry/flatbuffers/bin:/pantry/protobuf/bin"
+    protobuf_ROOT="/pantry/protobuf/lib/cmake/protobuf"
 
 ARG USERNAME=chef
 RUN useradd $USERNAME -lm -G sudo -d /home/$USERNAME -s /bin/bash -p "$(openssl passwd -6 $USERNAME)"

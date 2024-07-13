@@ -10,7 +10,10 @@
                 "ms-vscode.cpptools-extension-pack",
                 "redhat.vscode-xml",
                 "redhat.vscode-yaml"
-            ]
+            ],
+            "settings": {
+                "C_Cpp.default.compilerPath": "/usr/bin/g++-14"
+            }
         }
     }
 }
