@@ -33,10 +33,10 @@ RUN apt update \
 
 # Dev
 RUN apt install -yq \
-        libgtest-dev \
-        libgmock-dev\
         libbenchmark-dev \
         libboost-dev \
+        libgtest-dev \
+        libgmock-dev\
         libspdlog-dev \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/*
@@ -45,7 +45,6 @@ RUN apt install -yq \
 # DEV PACKAGES (FROM SOURCE)
 
 FROM base AS stage-abseil
-ARG INSTALL_ROOT
 RUN cd $HOME \
     && git clone --depth 1 --branch lts_2024_01_16 https://github.com/abseil/abseil-cpp.git abseil \
     && cd abseil \
@@ -57,7 +56,6 @@ RUN cd $HOME \
     && cmake --build build --config Release --target install -j4
 
 FROM base AS stage-eigen
-ARG INSTALL_ROOT
 RUN cd $HOME \
     && git clone --depth 1 --branch 3.4.0 https://gitlab.com/libeigen/eigen.git eigen \
     && cd eigen \
@@ -68,7 +66,6 @@ RUN cd $HOME \
     && cmake --build build --config Release --target install -j2
 
 FROM base AS stage-flatbuffers
-ARG INSTALL_ROOT
 RUN cd $HOME \
     && git clone --depth 1 --branch v24.3.25 https://github.com/google/flatbuffers.git flatbuffers \
     && cd flatbuffers \
@@ -78,7 +75,6 @@ RUN cd $HOME \
     && cmake --build build --config Release --target install -j4
 
 FROM base AS stage-highway
-ARG INSTALL_ROOT
 RUN cd $HOME \
     && git clone --depth 1 --branch 1.2.0 https://github.com/google/highway.git highway \
     && cd highway \
@@ -88,8 +84,8 @@ RUN cd $HOME \
         -DBUILD_TESTING=OFF \
     && cmake --build build --config Release --target install -j8
 
-FROM stage-abseil as stage-protobuf
-ARG INSTALL_ROOT
+FROM base as stage-protobuf
+COPY --from=stage-abseil  ${INSTALL_ROOT}/absl  ${INSTALL_ROOT}/absl
 RUN cd $HOME \ 
     && git clone --depth 1 --branch v27.2 https://github.com/protocolbuffers/protobuf.git \
     && cd protobuf \
@@ -100,24 +96,36 @@ RUN cd $HOME \
         -DCMAKE_PREFIX_PATH=${INSTALL_ROOT}/absl \ 
     && cmake --build build --config Release --target install -j8
 
-# FROM base as stage-arrow
-# ARG INSTALL_ROOT
-# RUN git clone --depth 1 --branch r-16.1.0 https://github.com/apache/arrow.git \
-#     && cd arrow \ 
-#     && cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/arrow -B cpp/build -S cpp \
-#     && cmake --build cpp/build --config Release --target install -j4 \
+FROM base as stage-arrow
+COPY --from=stage-protobuf  ${INSTALL_ROOT}/protobuf  ${INSTALL_ROOT}/protobuf
+RUN git clone --depth 1 --recurse-submodules --branch r-16.1.0 https://github.com/apache/arrow.git \
+    && cd arrow \ 
+    && cmake \
+        -B cpp/build -S cpp \
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/arrow \
+        -DARROW_BUILD_STATIC=ON \
+        -DARROW_BUILD_TESTS=OFF \
+        -DARROW_PARQUET=ON \
+        -DARROW_WITH_LZ4=ON \
+        -DARROW_WITH_SNAPPY=ON \
+        -DARROW_WITH_ZLIB=ON \
+        -DARROW_WITH_ZSTD=ON \
+        -DARROW_DEPENDENCY_SOURCE=AUTO \
+        -DProtobuf_SOURCE=${INSTALL_ROOT}/protobuf \
+    && cmake --build cpp/build --config Release --target install -j8
 
 ################################################################################
 # FINAL
 
 FROM base AS kitchen
-ARG INSTALL_ROOT
+ENV PANTRY="/pantry"
 
-COPY --from=stage-abseil       ${INSTALL_ROOT}/absl         ${INSTALL_ROOT}/absl
-COPY --from=stage-eigen        ${INSTALL_ROOT}/eigen        ${INSTALL_ROOT}/eigen
-COPY --from=stage-flatbuffers  ${INSTALL_ROOT}/flatbuffers  ${INSTALL_ROOT}/flatbuffers
-COPY --from=stage-highway      ${INSTALL_ROOT}/hwy          ${INSTALL_ROOT}/hwy
-COPY --from=stage-protobuf     ${INSTALL_ROOT}/protobuf     ${INSTALL_ROOT}/protobuf
+COPY --from=stage-abseil       ${INSTALL_ROOT}/absl         ${PANTRY}/absl
+COPY --from=stage-eigen        ${INSTALL_ROOT}/eigen        ${PANTRY}/eigen
+COPY --from=stage-flatbuffers  ${INSTALL_ROOT}/flatbuffers  ${PANTRY}/flatbuffers
+COPY --from=stage-highway      ${INSTALL_ROOT}/hwy          ${PANTRY}/hwy
+COPY --from=stage-protobuf     ${INSTALL_ROOT}/protobuf     ${PANTRY}/protobuf
+COPY --from=stage-arrow        ${INSTALL_ROOT}/arrow        ${PANTRY}/arrow
 
 # protoc, flatc
 ENV PATH="$PATH:${INSTALL_ROOT}/flatbuffers/bin:${INSTALL_ROOT}/protobuf/bin"

@@ -18,11 +18,13 @@
             },
             "environment": {
                 "absl_ROOT": "$env{PANTRY}/absl/lib/cmake",
+                "Arrow_ROOT": "$env{PANTRY}/arrow/lib/cmake",
                 "Eigen3_DIR": "$env{PANTRY}/eigen/share/eigen3/cmake",
                 "flatbuffers_ROOT": "$env{PANTRY}/flatbuffers/lib/cmake/flatbuffers",
                 "hwy_ROOT": "$env{PANTRY}/hwy/lib/cmake/hwy",
-                "utf8_range_ROOT": "$env{PANTRY}/protobuf/lib/cmake/utf8_range",
-                "protobuf_ROOT": "$env{PANTRY}/protobuf/lib/cmake/protobuf"
+                "Parquet_ROOT": "$env{PANTRY}/arrow/lib/cmake",
+                "protobuf_ROOT": "$env{PANTRY}/protobuf/lib/cmake/protobuf",
+                "utf8_range_ROOT": "$env{PANTRY}/protobuf/lib/cmake/utf8_range"
             }
         },
         { 

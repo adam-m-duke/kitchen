@@ -6,17 +6,19 @@ include(GNUInstallDirs)
 get_property(existingTargets DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY IMPORTED_TARGETS)
 
 find_package(absl         20240116  REQUIRED CONFIG)
+find_package(Arrow        16.1.0    REQUIRED CONFIG)
 find_package(benchmark    1.8.3     REQUIRED)
 find_package(Boost        1.83.0    REQUIRED)
 find_package(Eigen3       3.4.0     REQUIRED CONFIG)
 find_package(flatbuffers  24.3.5    REQUIRED CONFIG)
 find_package(GTest        1.14.0    REQUIRED)
 find_package(hwy          1.2.0     REQUIRED CONFIG)
+find_package(Parquet      16.1.0    REQUIRED CONFIG)
 find_package(protobuf     27.2.0    REQUIRED CONFIG)
 
-get_property(importedTargets DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY IMPORTED_TARGETS)
-list(REMOVE_ITEM importedTargets ${existingTargets})
-message(DEBUG "${importedTargets}")
+get_property(foundTargets DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY IMPORTED_TARGETS)
+list(REMOVE_ITEM foundTargets ${existingTargets})
+# message("${foundTargets}")
 ################################################################################
 add_subdirectory(src)
 ################################################################################
