@@ -4,6 +4,7 @@ FROM ubuntu:24.04 AS base
 # ENVIRONMENT
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV INSTALL_ROOT="/install"
 
 ENV CC gcc-14
 ENV CXX g++-14
@@ -14,8 +15,9 @@ ARG HOME=/root
 WORKDIR $HOME
 
 ################################################################################
-# SYSTEM PACKAGES
+# PACKAGES
 
+# System
 RUN apt update \
     && apt install -yq \
         sudo \
@@ -29,77 +31,96 @@ RUN apt update \
         gdb \
         cmake
 
-################################################################################
-# DEV PACKAGES
-
+# Dev
 RUN apt install -yq \
-    libgtest-dev \
-    libgmock-dev\
-    libbenchmark-dev \
-    libboost-dev \
-    libspdlog-dev
-
-RUN apt clean \
+        libgtest-dev \
+        libgmock-dev\
+        libbenchmark-dev \
+        libboost-dev \
+        libspdlog-dev \
+    && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/*
 
 ################################################################################
 # DEV PACKAGES (FROM SOURCE)
 
 FROM base AS stage-abseil
-RUN git clone --depth 1 --branch lts_2024_01_16 https://github.com/abseil/abseil-cpp.git abseil \
+ARG INSTALL_ROOT
+RUN cd $HOME \
+    && git clone --depth 1 --branch lts_2024_01_16 https://github.com/abseil/abseil-cpp.git abseil \
     && cd abseil \
-    && cmake -DCMAKE_INSTALL_PREFIX=/pantry/absl -DBUILD_TESTING=OFF -DABSL_PROPAGATE_CXX_STD=ON -B build \
-    && cmake --build build --config Release --target install -j4 \
-    && cd ..
+    && cmake \
+        -B build \
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/absl \
+        -DBUILD_TESTING=OFF \
+        -DABSL_PROPAGATE_CXX_STD=ON \
+    && cmake --build build --config Release --target install -j4
 
 FROM base AS stage-eigen
-RUN git clone --depth 1 --branch 3.4.0 https://gitlab.com/libeigen/eigen.git eigen \
+ARG INSTALL_ROOT
+RUN cd $HOME \
+    && git clone --depth 1 --branch 3.4.0 https://gitlab.com/libeigen/eigen.git eigen \
     && cd eigen \
-    && cmake -DCMAKE_INSTALL_PREFIX=/pantry/eigen -DBUILD_TESTING=OFF -B build \
-    && cmake --build build --config Release --target install -j2 \
-    && cd ..
+    && cmake \
+        -B build \
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/eigen \
+        -DBUILD_TESTING=OFF \
+    && cmake --build build --config Release --target install -j2
 
 FROM base AS stage-flatbuffers
-RUN git clone --depth 1 --branch v24.3.25 https://github.com/google/flatbuffers.git flatbuffers \
+ARG INSTALL_ROOT
+RUN cd $HOME \
+    && git clone --depth 1 --branch v24.3.25 https://github.com/google/flatbuffers.git flatbuffers \
     && cd flatbuffers \
-    && cmake -DCMAKE_INSTALL_PREFIX=/pantry/flatbuffers -B build \
-    && cmake --build build --config Release --target install -j4 \
-    && cd ..
+    && cmake \
+        -B build \
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/flatbuffers \
+    && cmake --build build --config Release --target install -j4
 
 FROM base AS stage-highway
-RUN git clone --depth 1 --branch 1.2.0 https://github.com/google/highway.git highway \
+ARG INSTALL_ROOT
+RUN cd $HOME \
+    && git clone --depth 1 --branch 1.2.0 https://github.com/google/highway.git highway \
     && cd highway \
-    && cmake -DCMAKE_INSTALL_PREFIX=/pantry/hwy -DBUILD_TESTING=OFF -B build \
-    && cmake --build build --config Release --target install -j8 \
-    && cd ..
+    && cmake \
+        -B build \    
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/hwy \
+        -DBUILD_TESTING=OFF \
+    && cmake --build build --config Release --target install -j8
 
 FROM stage-abseil as stage-protobuf
-RUN git clone --depth 1 --branch v27.2 https://github.com/protocolbuffers/protobuf.git \
+ARG INSTALL_ROOT
+RUN cd $HOME \ 
+    && git clone --depth 1 --branch v27.2 https://github.com/protocolbuffers/protobuf.git \
     && cd protobuf \
-    && cmake -DCMAKE_INSTALL_PREFIX=/pantry/protobuf -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package -DCMAKE_PREFIX_PATH=/pantry/absl -B build \ 
-    && cmake --build build --config Release --target install -j8 \
-    && cd ..
+    && cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/protobuf \
+        -B build \
+        -Dprotobuf_BUILD_TESTS=OFF \
+        -Dprotobuf_ABSL_PROVIDER=package \
+        -DCMAKE_PREFIX_PATH=${INSTALL_ROOT}/absl \ 
+    && cmake --build build --config Release --target install -j8
+
+# FROM base as stage-arrow
+# ARG INSTALL_ROOT
+# RUN git clone --depth 1 --branch r-16.1.0 https://github.com/apache/arrow.git \
+#     && cd arrow \ 
+#     && cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT}/arrow -B cpp/build -S cpp \
+#     && cmake --build cpp/build --config Release --target install -j4 \
 
 ################################################################################
 # FINAL
 
 FROM base AS kitchen
+ARG INSTALL_ROOT
 
-COPY --from=stage-abseil       /pantry/absl         /pantry/absl
-COPY --from=stage-eigen        /pantry/eigen        /pantry/eigen
-COPY --from=stage-flatbuffers  /pantry/flatbuffers  /pantry/flatbuffers
-COPY --from=stage-highway      /pantry/hwy          /pantry/hwy
-COPY --from=stage-protobuf     /pantry/protobuf     /pantry/protobuf
+COPY --from=stage-abseil       ${INSTALL_ROOT}/absl         ${INSTALL_ROOT}/absl
+COPY --from=stage-eigen        ${INSTALL_ROOT}/eigen        ${INSTALL_ROOT}/eigen
+COPY --from=stage-flatbuffers  ${INSTALL_ROOT}/flatbuffers  ${INSTALL_ROOT}/flatbuffers
+COPY --from=stage-highway      ${INSTALL_ROOT}/hwy          ${INSTALL_ROOT}/hwy
+COPY --from=stage-protobuf     ${INSTALL_ROOT}/protobuf     ${INSTALL_ROOT}/protobuf
 
 # protoc, flatc
-ENV PATH="$PATH:/pantry/flatbuffers/bin:/pantry/protobuf/bin"
-# cmake package config roots
-ENV absl_ROOT="/pantry/absl/lib/cmake" \
-    Eigen3_DIR="/pantry/eigen/share/eigen3/cmake" \
-    flatbuffers_ROOT="/pantry/flatbuffers/lib/cmake/flatbuffers" \
-    hwy_ROOT="/pantry/hwy/lib/cmake/hwy" \
-    utf8_range_ROOT="/pantry/protobuf/lib/cmake/utf8_range" \
-    protobuf_ROOT="/pantry/protobuf/lib/cmake/protobuf"
+ENV PATH="$PATH:${INSTALL_ROOT}/flatbuffers/bin:${INSTALL_ROOT}/protobuf/bin"
 
 ARG USERNAME=chef
 RUN useradd $USERNAME -lm -G sudo -d /home/$USERNAME -s /bin/bash -p "$(openssl passwd -6 $USERNAME)"

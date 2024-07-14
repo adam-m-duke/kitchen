@@ -1,27 +1,26 @@
 # Kitchen
 
-An integrated C++20 development environment for Ubuntu (v24.04 LTS).
+An integrated C++20 development environment
 
-This repository is intended to be derived/instantiated via GitHub forking, templating, or DevContainers.
+## Preinstallations
 
-## Installations
+Operating System(s)
+- Ubuntu 24.04 LTS
 
-#### Compilers
-- GCC 14
-- G++ 14
+Compiler(s):
+- GNU Compiler Collection (GCC-14)
 
-#### System Packages
-- OpenSSL
-- *...see [Dockerfile](.devcontainer/Dockerfile) for complete listing*
+Packages
+- [Boost](https://www.boost.org/)
+- [Eigen](https://libeigen.gitlab.io/)
+- Google
+    - [Abseil](https://abseil.io/)
+    - [Benchmark](https://github.com/google/benchmark/)
+    - [Flatbuffers](https://flatbuffers.dev/)
+    - [GoogleTest](https://google.github.io/googletest/)
+    - [Highway](https://google.github.io/highway/)
+    - [Protobuf](https://protobuf.dev/)
+- [OpenSSL](https://www.openssl.org/)
+- *see [Dockerfile](.devcontainer/Dockerfile) for full manifest*
 
-#### C++ Packages
-- Boost
-- Eigen
-- Google 
-    - Abseil
-    - Benchmark
-    - Highway
-    - Protobuf
-    - Test
-- *...see [CMakeLists.txt](CMakeLists.txt) for complete listing*
 
