@@ -15,10 +15,12 @@ Packages
 - [Eigen](https://libeigen.gitlab.io/)
 - Google
     - [Abseil](https://abseil.io/)
+    - [Arrow](https://arrow.apache.org/)
     - [Benchmark](https://github.com/google/benchmark/)
     - [Flatbuffers](https://flatbuffers.dev/)
     - [GoogleTest](https://google.github.io/googletest/)
     - [Highway](https://google.github.io/highway/)
+    - [Parquet](https://parquet.apache.org/)
     - [Protobuf](https://protobuf.dev/)
 - [OpenSSL](https://www.openssl.org/)
 - *see [Dockerfile](.devcontainer/Dockerfile) for full manifest*
