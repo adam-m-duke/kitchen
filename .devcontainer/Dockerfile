@@ -84,7 +84,7 @@ RUN cd $HOME \
         -DBUILD_TESTING=OFF \
     && cmake --build build --config Release --target install -j8
 
-FROM base as stage-protobuf
+FROM base AS stage-protobuf
 COPY --from=stage-abseil  ${INSTALL_ROOT}/absl  ${INSTALL_ROOT}/absl
 RUN cd $HOME \ 
     && git clone --depth 1 --branch v27.2 https://github.com/protocolbuffers/protobuf.git \
@@ -96,7 +96,7 @@ RUN cd $HOME \
         -DCMAKE_PREFIX_PATH=${INSTALL_ROOT}/absl \ 
     && cmake --build build --config Release --target install -j8
 
-FROM base as stage-arrow
+FROM base AS stage-arrow
 COPY --from=stage-protobuf  ${INSTALL_ROOT}/protobuf  ${INSTALL_ROOT}/protobuf
 RUN git clone --depth 1 --recurse-submodules --branch r-16.1.0 https://github.com/apache/arrow.git \
     && cd arrow \ 
